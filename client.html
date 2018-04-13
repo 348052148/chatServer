@@ -1,0 +1,28 @@
+<html>
+    <head></head>
+
+    <body>
+        <div id="abc">
+
+        </div>
+            <script>
+                    // 打开一个WebSocket:
+                    var ws = new WebSocket('ws://localhost:3000');
+                    // 响应onmessage事件:
+                    ws.onmessage = function(msg) {  
+                        console.log(msg);
+                        document.querySelector('#abc').innerHTML +=msg.data; 
+
+                        
+                    };
+                    ws.onopen =function(e){
+                        ws.send(JSON.stringify({action:'queryInfo.getAllConnector'}));
+                    }
+                    // 给服务器发送一个字符串:
+                    
+            </script>
+
+    </body>
+    
+    </html>
+
