@@ -4,8 +4,6 @@ const numCPUs = require('os').cpus().length;
 
 const  lib = require('./Lib');
 
-const action = require('./Action');
-
 if (cluster.isMaster) {
   console.log(`主进程 ${process.pid} 正在运行`);
 

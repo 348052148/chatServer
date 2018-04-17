@@ -1,123 +1,7 @@
 const Rx = require('rxjs/Rx');
 const WebSocketServer = require('ws').Server;
-const action = require('../Action');
-/**
- * 连接单元 我创建了一个流。关心我的就可以去进行订阅
- */
-class Connector {
-
-    constructor(ws){
-        this.websocket = ws;
-        this.id = parseInt(Math.random()*10000);
-    }
-
-    send(message){
-        this.websocket.send(JSON.stringify(message));
-    }
-
-    recv(call){
-        this.websocket.on('message',function(message){
-            call(JSON.parse(message));
-        });
-    }
-
-    close(call){
-        this.websocket.on('close',()=>{
-            call(this);
-        });
-    }
-
-}
-
-class ConnectPool{
-
-    constructor(){
-        this._connectLst = [];
-    }
-
-    // 添加 connetor 
-    add(connector){
-        this._connectLst.push(connector);
-    }
-
-    // 删除 connetor
-    delete(id){
-        for(var i=0;i<this._connectLst.length;i++){
-            if(this._connectLst[i].id == id){
-                this._connectLst.splice(i,1);
-                console.log(this._connectLst);
-                return this._connectLst;
-            }
-        }
-        return this._connectLst;
-    }
-
-    // 判断是否存在connetor
-    isExists(id) {
-        for(var i=0;i<this._connectLst.length;i++){
-            if(this._connectLst[i].id == id){
-                return true;
-            }
-        }
-        return false;
-     }
-
-     findById(id) {
-        for(var i=0;i<this._connectLst.length;i++){
-            if(this._connectLst[i].id == id){
-                return this._connectLst[i];
-            }
-        }
-        return false;
-    }
-
-    setNicknameById(id,nickname){
-        for(var i=0;i<this._connectLst.length;i++){
-            if(this._connectLst[i].id == id){
-                this._connectLst[i].nickname= nickname;
-                return this._connectLst[i];
-            }
-        }
-        return false;
-    }
-
-    //广播消息filter ID
-    broadcastMessageFilterId(ids,messageInfo) {
-        for(var i=0;i<this._connectLst.length;i++){
-            let f = true;
-            ids.forEach((v)=>{
-                if(v ==  this._connectLst[i].id){
-                    f = false;
-                }
-            })
-            if(f)
-                this._connectLst[i].send(messageInfo);
-        }
-    }
-
-    idList(){
-        let ids = [];
-        this._connectLst.forEach((v)=>{
-            ids.push({id:v.id,nickname:v.nickname});
-        });
-
-        return ids;
-    }
-
-    filterList(id){
-        let ids = [];
-        this._connectLst.forEach((v)=>{
-
-            if(v.id != id){
-                ids.push({id:v.id,nickname:v.nickname});
-            }
-                
-        });
-
-        return ids;
-    }
-
-}
+const Connector = require('./Connector.js').Connector;
+const ConnectPool = require('./ConnectPool.js').ConnectPool;
 
 class MessageServer{
 
@@ -135,9 +19,6 @@ class MessageServer{
 
             this.connectPool.add(conn);
 
-            //加载路由器
-            let router = new action.Router(this.connectPool,conn);
-
             /**
              * message {action,from,to,group,content}
              */
@@ -150,8 +31,16 @@ class MessageServer{
 
                         conn.username = message.data.username;
                         conn.nickname = message.data.username;
+                        //id
+                        if(message.data.id){
+                            conn.id = message.data.id;
+                        }
 
                         let ids = this.connectPool.idList();
+
+                       for(let i=0;i<ids.length;i++){
+                           ids[i].msgLst = [];
+                       }
 
                         conn.send({action:'login',data:{
                                 username:conn.username,
@@ -200,6 +89,41 @@ class MessageServer{
                             content:message.data.content
                         }});
                     }
+                    //查找用户
+                    if(message.action == 'user.find.list'){
+                        console.log(message);
+                        let lst = this.connectPool.findByName(message.data.keyword);
+                        console.log(lst);
+                        conn.send({action:message.action,data:{
+                            list:lst
+                        }});
+                    }
+
+                    //获取app menu
+                    if(message.action == 'system.app.menu'){
+                        console.log(message);
+                        let lst = [
+                            {appid:'2',icon:'social-pinterest',name:'翻译',path:'/ts',components:'https://api.ismbao.com.cn/static/translate.js'},
+                            {appid:'3',icon:'ios-chatbubble',name:'消息',path:'/msg'},
+                            {appid:"4",icon:'ios-list',name:'任务清单',path:'/task',components:'https://api.ismbao.com.cn/static/taskList.js'},
+                            {appid:'7',icon:'help-buoy',name:'应用箱',path:'/appbox'},
+                            {appid:'5',icon:'person',name:'个人中心',path:'/person'}
+                        ];
+                        conn.send({action:message.action,data:{
+                            list:lst
+                        }});
+                    }
+                    //获取app list
+                    if(message.action == 'system.app.list'){
+                        let lst = [
+                            {appid:'2',icon:'social-pinterest',name:'翻译',path:'/ts',components:'http://localhost:8080/static/translate.js',ismenu:true,},
+                            {appid:"4",icon:'ios-list',name:'任务清单',path:'/task',components:'http://localhost:8080/static/taskList.js',ismenu:true},
+                            {appid:"4",icon:'headphone',name:'抠米音乐',path:'/task',components:'http://localhost:8080/static/taskList.js',ismenu:false},
+                        ];
+                        conn.send({action:message.action,data:{
+                            list:lst
+                        }});
+                    }
 
                 }catch(e){
                     conn.send({action:'exception',data:'服务器异常'});
@@ -222,4 +146,4 @@ class MessageServer{
 }
 
 
-module.exports = {MessageServer,Connector,ConnectPool};
+module.exports = {MessageServer};
