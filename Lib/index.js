@@ -2,6 +2,7 @@ const Rx = require('rxjs/Rx');
 const WebSocketServer = require('ws').Server;
 const Connector = require('./Connector.js').Connector;
 const ConnectPool = require('./ConnectPool.js').ConnectPool;
+const Components = require('./Components.js').Components;
 
 class MessageServer{
 
@@ -88,6 +89,10 @@ class MessageServer{
                             from:message.data.from,
                             content:message.data.content
                         }});
+                        toConn.send({action:'message.recv.count',data:{
+                            content:message.data.content
+                        }});
+                        
                     }
                     //查找用户
                     if(message.action == 'user.find.list'){
@@ -103,26 +108,51 @@ class MessageServer{
                     if(message.action == 'system.app.menu'){
                         console.log(message);
                         let lst = [
-                            {appid:'2',icon:'social-pinterest',name:'翻译',path:'/ts',components:'https://api.ismbao.com.cn/static/translate.js'},
+                            
                             {appid:'3',icon:'ios-chatbubble',name:'消息',path:'/msg'},
-                            {appid:"4",icon:'ios-list',name:'任务清单',path:'/task',components:'https://api.ismbao.com.cn/static/taskList.js'},
-                            {appid:'7',icon:'help-buoy',name:'应用箱',path:'/appbox'},
-                            {appid:'5',icon:'person',name:'个人中心',path:'/person'}
+                            
                         ];
-                        conn.send({action:message.action,data:{
-                            list:lst
-                        }});
+                        Components.findAll((f)=>{
+                            console.log( f);
+                            f.forEach(element => {
+                                lst.push({
+                                    appid:element.appid,
+                                    icon:element.icon,
+                                    name:element.name,
+                                    path:element.path,
+                                    components:Components.resouceURL+element.components,
+                                    ismenu:element.ismenu
+                                });
+
+                            });
+                            lst.push({appid:'5',icon:'person',name:'个人中心',path:'/person'});
+                            conn.send({action:message.action,data:{
+                                list:lst
+                            }});
+                        });
                     }
                     //获取app list
                     if(message.action == 'system.app.list'){
                         let lst = [
-                            {appid:'2',icon:'social-pinterest',name:'翻译',path:'/ts',components:'http://localhost:8080/static/translate.js',ismenu:true,},
-                            {appid:"4",icon:'ios-list',name:'任务清单',path:'/task',components:'http://localhost:8080/static/taskList.js',ismenu:true},
-                            {appid:"4",icon:'headphone',name:'抠米音乐',path:'/task',components:'http://localhost:8080/static/taskList.js',ismenu:false},
                         ];
-                        conn.send({action:message.action,data:{
-                            list:lst
-                        }});
+                        
+                        Components.findAll((f)=>{
+                            f.forEach(element => {
+                                lst.push({
+                                    appid:element.appid,
+                                    icon:element.icon,
+                                    name:element.name,
+                                    path:element.path,
+                                    components:Components.resouceURL+element.components,
+                                    ismenu:element.ismenu
+                                });
+
+                            });
+                            conn.send({action:message.action,data:{
+                                list:lst
+                            }});
+                        });
+
                     }
 
                 }catch(e){

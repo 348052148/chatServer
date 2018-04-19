@@ -1,0 +1,1 @@
+{"root":"components/translate","sort":1,"appid":"2","icon":"social-pinterest","name":"翻译","path":"/ts","components":"/static/translate.js","ismenu":false,"resouceHost":"http://api.ismbao.com.cn/"}

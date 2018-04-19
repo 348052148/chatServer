@@ -1,0 +1,1 @@
+{"root":"components/appbox","sort":10000,"appid":"21","icon":"help-buoy","name":"应用箱","path":"/appbox","components":"/static/appbox.js","ismenu":false,"resouceHost":"http://api.ismbao.com.cn/"}

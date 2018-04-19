@@ -1,0 +1,1 @@
+{"root":"components/taskList","sort":2,"appid":"012","icon":"ios-list","name":"任务清单","path":"/task","components":"/static/taskList.js","ismenu":false,"resouceHost":"http://api.ismbao.com.cn/"}
