@@ -43,7 +43,7 @@ class MessageServer{
                            ids[i].msgLst = [];
                        }
 
-                        conn.send({action:'login',data:{
+                        conn.send({action:message.action,data:{
                                 username:conn.username,
                                 nickname:conn.nickname,
                                 id:conn.id,
